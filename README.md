@@ -279,4 +279,4 @@ curl http://127.0.0.1:8000/health
 
 ## License
 
-当前仓库根目录中未看到 `LICENSE` 文件。如需公开发布到 GitHub，建议补充许可证声明并明确使用范围。
+MIT
