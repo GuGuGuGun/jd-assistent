@@ -1,0 +1,12 @@
+%TMP%/
+.env
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+jd_assistent.db
+frontend/node_modules/
+backend/__pycache__/
+backend/tests/__pycache__/
+backend/worker/__pycache__/

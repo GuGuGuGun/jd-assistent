@@ -1,0 +1,72 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      DEBUG: ${DEBUG:-true}
+      DATABASE_URL: ${DATABASE_URL:-sqlite+aiosqlite:///./data/jd_assistent.db}
+      TASK_DISPATCHER_MODE: celery
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      SSE_EVENT_BUS_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      SSE_REDIS_CHANNEL_PREFIX: ${SSE_REDIS_CHANNEL_PREFIX:-jd-assistent:sse}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.3}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-4096}
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/app/data
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      DEBUG: ${DEBUG:-true}
+      DATABASE_URL: ${DATABASE_URL:-sqlite+aiosqlite:///./data/jd_assistent.db}
+      TASK_DISPATCHER_MODE: celery
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      SSE_EVENT_BUS_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      SSE_REDIS_CHANNEL_PREFIX: ${SSE_REDIS_CHANNEL_PREFIX:-jd-assistent:sse}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.3}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-4096}
+    command: celery -A backend.worker.celery_app:celery_app worker --loglevel=info
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:
