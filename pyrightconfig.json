@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/pyright/main/packages/pyright/schema/pyrightconfig.schema.json",
+  "include": [
+    "backend",
+    "alembic"
+  ],
+  "extraPaths": [
+    "."
+  ],
+  "venvPath": "E:/",
+  "venv": "miniconda3",
+  "pythonVersion": "3.13"
+}
